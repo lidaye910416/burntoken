@@ -66,3 +66,63 @@ describe('OpenAIProvider', () => {
     expect(models).toEqual(['gpt-4o', 'gpt-3.5-turbo'])
   })
 })
+
+const { AnthropicProvider } = await import('../.claude/skills/burn-review-tribunal/lib/providers/anthropic.js')
+
+describe('AnthropicProvider', () => {
+  it('sends messages request with x-api-key header', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'hi' }],
+        usage: { input_tokens: 10, output_tokens: 5 },
+        model: 'claude-3-5-sonnet-20241022',
+      }),
+    })
+
+    const p = new AnthropicProvider({
+      name: 'anthropic', type: 'anthropic',
+      endpoint: 'https://api.anthropic.com', key: 'sk-ant-test',
+    })
+    const r = await p.chat(
+      [{ role: 'user', content: 'hello' }],
+      { model: 'claude-3-5-sonnet-20241022', max_tokens: 100 }
+    )
+
+    expect(r.text).toBe('hi')
+    expect(r.usage.total_tokens).toBe(15)
+
+    const [url, init] = mockFetch.mock.calls[0]
+    expect(url).toContain('/v1/messages')
+    expect(init.headers['x-api-key']).toBe('sk-ant-test')
+    expect(init.headers['anthropic-version']).toBeDefined()
+  })
+
+  it('extracts system message from messages array', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [{ type: 'text', text: 'ok' }],
+        usage: { input_tokens: 0, output_tokens: 0 },
+        model: 'claude-3-5-sonnet-20241022',
+      }),
+    })
+
+    const p = new AnthropicProvider({
+      name: 'anthropic', type: 'anthropic',
+      endpoint: 'https://api.anthropic.com', key: 'sk-ant-test',
+    })
+    await p.chat(
+      [
+        { role: 'system', content: 'you are a reviewer' },
+        { role: 'user', content: 'review this' },
+      ],
+      { model: 'claude-3-5-sonnet-20241022' }
+    )
+
+    const [, init] = mockFetch.mock.calls[0]
+    const body = JSON.parse(init.body)
+    expect(body.system).toBe('you are a reviewer')
+    expect(body.messages).toEqual([{ role: 'user', content: 'review this' }])
+  })
+})
