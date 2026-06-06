@@ -1,0 +1,31 @@
+# ─── Editor / OS ─────────────────────────
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# ─── Node (burn-review-tribunal) ─────────
+node_modules/
+npm-debug.log*
+
+# ─── Python (burn 项目自身) ──────────────
+__pycache__/
+*.pyc
+.venv/
+.env
+*.key
+proxy.pid
+*.log
+.uv-cache/
+
+# 注: *.key / proxy.pid / *.log / .uv-cache/ 来自原 burn Python 项目，保留以防破坏既有工作流
+
+# ─── ultracode Workflow 工具 ─────────────
+.cache/
+.calibration/
+
+# ─── Tribunal 输出 ───────────────────────
+reviews/
+
+# ─── 日志 ────────────────────────────────
+logs/
