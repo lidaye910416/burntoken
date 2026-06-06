@@ -65,6 +65,39 @@ export default async function run() {
 
   log('── 预估 ──')
   log(formatMatrix(matrix, ROUND_LIST, FINDING_LIST))
+
+  // Interactive: ask for model config
+  log('── 配置模型 ──')
+  const lensCfg = await promptModelConfig('lens')
+  const judgeCfg = args.preset && (await promptYesNo('judge 沿用 lens 配置?', true))
+    ? lensCfg
+    : await promptModelConfig('judge')
+
+  // Build provider instances
+  function makeProvider(cfg) {
+    if (cfg.type === 'anthropic') return new AnthropicProvider(cfg)
+    return new OpenAIProvider(cfg)
+  }
+  const lensProvider = makeProvider(lensCfg)
+  const judgeProvider = makeProvider(judgeCfg)
+
+  log(`✓ lens: ${lensCfg.provider}/${lensCfg.model}`)
+  log(`✓ judge: ${judgeCfg.provider}/${judgeCfg.model}`)
+
+  // Test connectivity with one cheap call
+  log('── 连通性测试 ──')
+  try {
+    const r = await lensProvider.chat(
+      [{ role: 'user', content: 'ping' }],
+      { model: lensCfg.model, max_tokens: 8 }
+    )
+    log(`✓ lens OK: ${r.usage.total_tokens} tokens, ${r.latency_ms}ms`)
+  } catch (err) {
+    log(`✗ lens 失败: ${err.message}`)
+    throw err
+  }
+
+  // (will continue in next task)
 }
 
 run().catch(err => {
