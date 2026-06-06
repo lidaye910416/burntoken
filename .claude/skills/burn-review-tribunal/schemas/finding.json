@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://burn-tribunal.local/schemas/finding.json",
+  "title": "Finding",
+  "type": "object",
+  "required": ["findings"],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "lens", "file", "line", "severity", "category", "title", "evidence", "rationale"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^f_[a-zA-Z0-9_-]+$" },
+          "lens": { "enum": ["correctness", "security", "performance", "style", "api", "testability", "docs"] },
+          "file": { "type": "string" },
+          "line": { "type": "integer", "minimum": 1 },
+          "severity": { "enum": ["critical", "major", "minor", "nit"] },
+          "category": { "type": "string" },
+          "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "evidence": { "type": "string", "maxLength": 2000 },
+          "rationale": { "type": "string", "maxLength": 500 }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
