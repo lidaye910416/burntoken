@@ -252,18 +252,18 @@ export HTTPS_PROXY=http://your-proxy:8080
 
 ---
 
-## burn-review-tribunal (大型审判团) — *实施中*
+## burn-review-tribunal (大型审判团)
 
 对 burn 项目自身做 exhaustive 代码审查 + 烧 token 的 workflow 脚本（Node.js 实现，与上面 burn CLI 并列）。
 
-详见：
+7 个独立审查视角（lens）× 3 个对抗性裁判（judge）× 多轮循环到枯竭，详见：
 - 设计: `docs/superpowers/specs/2026-06-06-burn-review-tribunal-design.md`
 - 实施计划: `docs/superpowers/plans/2026-06-06-burn-review-tribunal.md`
-- Skill: `.claude/skills/burn-review-tribunal/SKILL.md` *(Task 20 创建)*
+- Skill: `.claude/skills/burn-review-tribunal/SKILL.md`
 
 ```bash
 # 跑
-node .claude/workflows/burn-review-tribunal.js --target burn/   # *(Task 16-18 创建)*
+node .claude/workflows/burn-review-tribunal.js --target burn/
 
 # 测
 npm test
