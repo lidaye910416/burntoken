@@ -29,3 +29,15 @@ reviews/
 
 # ─── 日志 ────────────────────────────────
 logs/
+
+# ─── 临时产物 ────────────────────────────
+# pytest-cov 覆盖率二进制（每次跑测试都会重新生成）
+.coverage
+.coverage.*
+htmlcov/
+# 个人实验输出（mirofish / deer-flow 等时间戳目录，纯本地）
+out/
+# 已弃用的 LiteLLM 代理方案（见根 install.sh + CHANGELOG）
+legacy/
+# 个人 superpowers skill 引用（plans/ + specs/ 是本地草稿，不进版本）
+docs/superpowers/

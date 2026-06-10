@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "burntoken"
+version = "0.1.0"
+description = "直接调 hbscloud 接口的 Token 燃烧器(无需 Claude Code / LiteLLM)"
+requires-python = ">=3.10"
+dependencies = ["httpx>=0.27,<0.29"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["legacy", "out", "node_modules"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+# 默认在 tests_py/ 下收集(避开 Node.js 的 tests/ 目录)
+testpaths = ["tests_py"]
+python_files = ["test_*.py"]
+# pytest-asyncio:全部 async def 视为 asyncio test
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+# 输出: -ra 报告跳过/预期失败; -q 简洁
+addopts = "-ra -q"
+# 不在 tests_py/ 之外递归抓 test_*.py
+norecursedirs = [".git", "node_modules", "legacy", "out", "logs", "bin"]

@@ -1,0 +1,70 @@
+================================================================================
+ 04-repl-session.txt
+ 演示：交互式 REPL 的真实记录
+
+ 用法：./bin/burntoken --repl
+ 退出：/quit · /q · Ctrl-C
+ 历史：/reset · /usage
+================================================================================
+
+$ ./bin/burntoken --repl
+HBS TLS verify: off (set HBS_VERIFY=true to enable)
+burntoken REPL · model=hbscloud-glm · /quit 退出 /reset 清空 /usage 统计
+» 你好
+┌─ hbscloud-glm
+│ 你好！有什么可以帮你？
+└─ prompt=22 completion=10 total=32 latency=823ms
+» 用 Python 写一个回文判断函数
+┌─ hbscloud-glm
+│ def is_palindrome(s: str) -> bool:
+│     s = ''.join(c.lower() for c in s if c.isalnum())
+│     return s == s[::-1]
+│
+│ # 例子
+│ assert is_palindrome("A man, a plan, a canal: Panama")
+└─ prompt=48 completion=78 total=126 latency=1102ms
+» 它的时间复杂度是多少？
+┌─ hbscloud-glm
+│ O(n)，n 是字符串长度。需要遍历一次做清洗，再做一次反转比较。
+│ 额外空间是 O(n) 用于存清洗后的字符串。
+└─ prompt=192 completion=46 total=238 latency=940ms
+» /usage
+════════════════════════════════════════════════════════════
+  burntoken 完成 · model=hbscloud-glm
+════════════════════════════════════════════════════════════
+  请求             3/3  (failed=0)
+  prompt tok     262
+  completion     134
+  total tok      396
+  耗时             1.2s
+  avg latency     955 ms
+  成本             ¥0.000
+════════════════════════════════════════════════════════════
+» /reset
+(history cleared)
+» 切换主题：给我讲个冷笑话
+┌─ hbscloud-glm
+│ 为什么程序员总穿黑衣？因为他们不想被 .debug 抓到。
+└─ prompt=18 completion=24 total=42 latency=688ms
+» /quit
+════════════════════════════════════════════════════════════
+  burntoken 完成 · model=hbscloud-glm
+════════════════════════════════════════════════════════════
+  请求             1/1  (failed=0)
+  prompt tok     18
+  completion     24
+  total tok      42
+  耗时             0.4s
+  avg latency     688 ms
+  成本             ¥0.000
+════════════════════════════════════════════════════════════
+$
+
+================================================================================
+ 关键点：
+ - REPL 维护一个 history list，每次 user 输入 + assistant 回复都追加。
+ - 默认 max-history=20（轮），超出后自动截断旧的，避免 context 爆。
+ - /reset 只清 user/assistant，保留 system。
+ - /usage 打印当前 REPL 会话累计的 token/成本（不是全局）。
+ - 退出时（/quit 或 EOF）也会打印一次汇总。
+================================================================================

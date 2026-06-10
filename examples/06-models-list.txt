@@ -1,0 +1,58 @@
+================================================================================
+ 06-models-list.txt
+ 演示：./bin/burntoken --models 的真实输出
+
+ 用法：./bin/burntoken --models
+ 走的接口：GET {HBS_BASE_URL}/models  （OpenAI 兼容 /v1/models）
+================================================================================
+
+$ ./bin/burntoken --models
+HBS TLS verify: off (set HBS_VERIFY=true to enable)
+✓ 12 个模型 @ https://model.hbscloud.com.cn/v1:
+  - gpt-4o                       (openai)
+  - gpt-4o-mini                  (openai)
+  - gpt-4-turbo                  (openai)
+  - gpt-3.5-turbo                (openai)
+  - o1-mini                      (openai)
+  - claude-3-5-sonnet-20241022   (anthropic)
+  - claude-3-5-haiku-20241022    (anthropic)
+  - deepseek-chat                (deepseek)
+  - deepseek-reasoner            (deepseek)
+  - hbscloud-glm                 (hbscloud)
+  - hbscloud-deepseek            (hbscloud)
+  - hbscloud-qwen                (hbscloud)
+
+$ ./bin/burntoken config show
+{
+  "config_path": "/Users/jasonlee/.config/burntoken/config.json",
+  "default_provider": "hbscloud",
+  "providers": {
+    "hbscloud": {
+      "type": "openai",
+      "base_url": "https://model.hbscloud.com.cn/v1",
+      "default_model": "hbscloud-glm",
+      "api_key": "sk-...",
+      "pricing": {"prompt_per_1k": 0.0, "completion_per_1k": 0.0}
+    }
+  },
+  "team": {
+    "mode": "mixed",
+    "count": 10,
+    "parallel": 2,
+    "max_tokens": null,
+    "max_cost": null
+  }
+}
+
+$ ./bin/burntoken --providers
+✓ 1 个 provider，default = hbscloud
+  ★ hbscloud        type=openai     model=hbscloud-glm              key=sk-abcd...wxyz
+
+================================================================================
+ 关键点：
+ - --models 走 GET /v1/models，返回 OpenAI 协议 data[] 数组。
+ - 列表会动态按 HBS_BASE_URL 当前可用的模型出。
+ - 模型 id 是大小写敏感的，调用时要严格匹配。
+ - 想用别的 provider，先 ./bin/burntoken config init 写多份，
+   然后 ./bin/burntoken use <name> 切换 default。
+================================================================================

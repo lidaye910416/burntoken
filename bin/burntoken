@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# burntoken: 多 provider 切换 + Agent team
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+ENV_FILE="$PROJECT_DIR/.env"
+
+# 1. 显式 BURNTOKEN_CONFIG
+if [ -n "${BURNTOKEN_CONFIG:-}" ] && [ -f "$BURNTOKEN_CONFIG" ]; then
+  export BURNTOKEN_CONFIG
+fi
+
+# 2. 自动 source .env（如果存在）
+if [ -f "$ENV_FILE" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
+# 3. 把项目根加进 PYTHONPATH
+export PYTHONPATH="$PROJECT_DIR:${PYTHONPATH:-}"
+
+# 4. 走 python -m burn
+exec python3 -m burntoken "$@"
