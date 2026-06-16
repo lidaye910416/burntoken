@@ -1,6 +1,6 @@
 # burntoken · hbscloud Token 燃烧器
 
-[![CI](https://img.shields.io/github/actions/workflow/status/jasonlee/burntoken/ci.yml?branch=main&label=ci&logo=github)](https://github.com/jasonlee/burntoken/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/lidaye910416/burntoken/ci.yml?branch=main&label=ci&logo=github)](https://github.com/lidaye910416/burntoken/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![code style: ruff](https://img.shields.io/badge/code%20style-ruff-261230?logo=ruff&logoColor=white)](https://docs.astral.sh/ruff/)
