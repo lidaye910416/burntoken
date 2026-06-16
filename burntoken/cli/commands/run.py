@@ -5,6 +5,8 @@ import sys
 import time
 from typing import List, Optional
 
+import httpx
+
 from ...client import ChatMessage, HBSError
 from .. import HBSClient  # routed through package __getattr__ → shim
 from ...presets import get as get_preset
@@ -110,11 +112,19 @@ def cmd_run(args) -> int:
                             "usage": usage_dict, "latency_ms": latency,
                             "finish_reason": resp.choices[0].finish_reason,
                         })
-            except HBSError as e:
-                tracker.record(0, 0, 0, ok=False, error=str(e))
+            except (HBSError, httpx.HTTPError) as e:
+                # 任何 API 失败都要落 tracker：HBSError 是 wrapper，
+                # httpx.HTTPError 覆盖 ConnectError / TimeoutException /
+                # HTTPStatusError / RequestError 等底层错误。
+                # 这样 LogEventSink 才能在 --log-file 时写出 error event。
+                tag = e.__class__.__name__
+                tracker.record(0, 0, 0, ok=False, error=f"{tag}: {e}")
                 print(colorize(f"✗ 调用失败：{e}", "\033[31m"), file=sys.stderr)
                 if writer:
-                    writer.write({"type": "error", "error": str(e), "status": e.status})
+                    status = getattr(e, "status", None) or getattr(
+                        getattr(e, "response", None), "status_code", None
+                    )
+                    writer.write({"type": "error", "error": str(e), "status": status})
                 return 2
     finally:
         if writer:

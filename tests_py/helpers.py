@@ -49,7 +49,10 @@ def invoke(argv: List[str]) -> InvokeResult:
     exit_code = 0
     try:
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            cli.main(argv)
+            rc = cli.main(argv)
+        # cli.main() 直接返回 int；不要丢。SystemExit 仍走 except 分支。
+        if isinstance(rc, int):
+            exit_code = rc
     except SystemExit as e:
         # argparse 的 action="version" / "help" 走 SystemExit(code)
         code = e.code

@@ -5,8 +5,11 @@
 #  5 个内置 preset：chat / math / code / essay / longctx
 #
 #  使用：
-#    ./examples/03-batch-burn.sh        # 真的会发请求，先把 .env 配好
-#    ./examples/03-batch-burn.sh demo   # 仅打印命令，不执行
+#    ./examples/03-batch-burn.sh           # 安全默认：仅打印命令（demo 模式）
+#    ./examples/03-batch-burn.sh demo      # 同上，明确指定 demo
+#    ./examples/03-batch-burn.sh confirm   # 真的发请求（需要 .env 配好 HBS_API_KEY）
+#
+#  设计原则：默认 dry-run。要真烧必须显式写 "confirm"，避免误操作。
 # =============================================================
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,7 +17,35 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_DIR"
 [ -f .env ] && { set -a; source .env; set +a; }
 
-MODE="${1:-run}"
+MODE="${1:-demo}"
+
+# ---- 模式合法性 + 启动横幅 ----
+# 注: 错误信息只用 ASCII 字符。bash 3.2 + set -u + 全角字符会误把后续 UTF-8
+# 字节当变量名解析, 报 unbound variable。
+case "$MODE" in
+  demo)
+    echo "[MODE] demo (dry-run; prints commands only, no real burn)"
+    echo "       To actually burn: $0 confirm"
+    ;;
+  confirm)
+    # 先尝试 .env,但尊重显式设置的 HBS_API_KEY（即使是空也尊重）
+    # 简化逻辑: 如果 HBS_API_KEY 未在环境里设, 才 source .env
+    if [ -z "${HBS_API_KEY+x}" ] && [ -f .env ]; then
+      set -a; source .env; set +a
+    fi
+    if [ -z "${HBS_API_KEY:-}" ]; then
+      echo "ERROR: HBS_API_KEY not set. Put it in .env or export it first." >&2
+      exit 1
+    fi
+    echo "[MODE] confirm (WILL hit the API; Ctrl-C to abort in 3s)"
+    sleep 3
+    ;;
+  *)
+    echo "ERROR: unknown mode: $MODE (use: demo | confirm)" >&2
+    echo "  Default is demo. To actually burn: $0 confirm" >&2
+    exit 2
+    ;;
+esac
 
 run() {
   echo
