@@ -15,6 +15,7 @@
 - [架构](#架构)
 - [安装](#安装)
 - [配置](#配置)
+- [模式总览](#模式总览)
 - [用法](#用法)
 - [文件结构](#文件结构)
 - [高级](#高级)
@@ -55,6 +56,87 @@ $EDITOR ~/burntoken/.env
 # 可选：HBS_MODEL（默认 gpt-3.5-turbo；先用 `burntoken --models` 查实际名）
 # 可选：HBS_PRICE_PROMPT / HBS_PRICE_COMPLETION（每 1k token 的价格，用于成本统计）
 ```
+
+## 模式总览
+
+burntoken 有 **5 层可切换模式**，按作用域从大到小排：
+
+### 1. 子命令模式（10 个；决定做什么）
+
+| 子命令 | 用途 | 是否真烧 |
+|--------|------|---------|
+| `run`（默认） | 单条调用 | ✓ |
+| `burn` | 批量烧 token（-n 次数 -P 并发） | ✓ |
+| `repl` | 交互 REPL（`/usage` `/reset` `/quit`） | ✓ |
+| `models` | 列出已配置 provider 上的模型 | 只读 |
+| `config` | show / init / path（管理 .env 与 config） | 不调 API |
+| `providers` | 列出所有 provider | 不调 API |
+| `use <name>` | 切换默认 provider（写到 `~/.config/burntoken/active`） | 不调 API |
+| `team` | 多 agent 流水线（Strategist→Dispatcher→Accountant→Reviewer） | ✓ |
+| `review` | 全项目 review：本地路径 / `github:user/repo` / URL | ✓ |
+| `work` | 真实任务（review/docs/tests/refactor/explain/...） | ✓ |
+
+详见 `burntoken <cmd> --help` 或下文 [用法](#用法)。
+
+### 2. Preset 模式（5 个；决定 prompt 风格与 max_tokens）
+
+| preset | 默认 max_tokens | 用途 |
+|--------|----------------|------|
+| `chat` | 128 | 短答闲聊 |
+| `math` | 512 | 推理题 |
+| `code` | 768 | 代码生成 |
+| `essay` | 2048 | 长文输出 |
+| `longctx` | 512 | 长上下文（用 `--multi-turn N` 灌 N 轮历史） |
+
+用 `--preset <name>` 选择。
+
+### 3. 行为 flag（决定单次调用怎么跑）
+
+| flag | 效果 |
+|------|------|
+| `--stream` | SSE 流式输出（边收边打） |
+| `--save PATH` | 把每条结果追加到 JSONL（完整 text + usage） |
+| `--log-file PATH` | 把每次调用的结构化事件写到 JSONL（run_id / tokens / cost / error） |
+| `--max-tokens N` | **熔断**：累计 token ≥ N 自动停 |
+| `--max-cost X` | **熔断**：累计成本 ≥ X 自动停（需设 HBS_PRICE_*） |
+| `--multi-turn N` | longctx 模式：塞入 N 轮 user/assistant 历史 |
+| `--seed N` | 固定随机种子 → prompt 可复现 |
+| `--repl` | 进 REPL 循环 |
+| `--log-file PATH` | 顶层 flag：所有子命令的调用都走 JSONL 事件流 |
+
+### 4. Example 脚本模式（决定 examples/*.sh 怎么跑）
+
+**`examples/03-batch-burn.sh` 的双模式**：
+
+| 模式 | 调用方式 | 行为 |
+|------|---------|------|
+| `demo`（**默认**） | `./examples/03-batch-burn.sh` 或 `./examples/03-batch-burn.sh demo` | 干跑（dry-run）：只打印 `./bin/burntoken ...` 命令，不真发请求 |
+| `confirm` | `./examples/03-batch-burn.sh confirm` | 真烧：检查 `HBS_API_KEY`、给 3 秒反悔窗口、然后实跑全部 8 段 |
+
+> 设计原则：examples/ 脚本**默认 dry-run**。要真烧必须显式写 `confirm`，避免误操作烧 token。
+
+### 5. Env / Provider 模式（决定底层怎么连）
+
+| 变量 | 用途 | 默认 |
+|------|------|------|
+| `HBS_API_KEY` | API 必填 key | （必填） |
+| `HBS_BASE_URL` | provider base URL | `https://model.hbscloud.com.cn/v1` |
+| `HBS_MODEL` | 默认模型 | （空 → 走 provider 默认） |
+| `HBS_VERIFY` | TLS 证书校验 | `false`（启动 banner 会提示） |
+| `HBS_PRICE_PROMPT` / `HBS_PRICE_COMPLETION` | 每 1k token 价格（CNY/USD 自定） | `0`（不计算） |
+| `BURNTOKEN_CONFIG` | 配置文件路径（providers 多 provider 模式） | `~/.config/burntoken/config.yaml` |
+| `BURNTOKEN_CACHE_DIR` | review/work 子命令的本地缓存目录 | `~/.cache/burntoken` |
+
+**Provider 类型**（`providers/`）：
+- `openai`（默认，OpenAI 兼容协议，覆盖 hbscloud / OpenAI / 其他兼容端点）
+- `anthropic`（Anthropic Messages API）
+
+**`burntoken team --mode`**（Agent 流水线模式）：
+- `meaningful` — 任务有意义，每个 agent 真干活
+- `pointless` — 任务无意义，刻意烧 token
+- `mixed` — 混合
+
+---
 
 ## 用法
 
